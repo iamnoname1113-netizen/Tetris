@@ -1,5 +1,5 @@
 import pygame
-from constants import DAS_DELAY_MS, ARR_DELAY_MS, SOFT_DROP_MULT
+from constants import DAS_DELAY_MS, ARR_DELAY_MS
 
 class Player:
     """

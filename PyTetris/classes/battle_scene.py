@@ -1,7 +1,5 @@
 import pygame
 import sys
-import math
-import random
 from constants import *
 from classes.game_manager import GameManager
 from classes.audio_manager import AudioManager
@@ -11,45 +9,29 @@ from classes.classic_scene import (draw_rounded, draw_block, draw_ghost_block,
                                    Button, ToggleButton, SettingsOverlay)
 
 
-# ─── Screen-shake helper ──────────────────────────────────────────────────────
-
-class ScreenShake:
-    def __init__(self):
-        self._timer    = 0      # remaining frames
-        self._strength = 0      # max pixel offset
-        self._decay    = 0.85   # strength multiplier per frame
-
-    def trigger(self, strength=10, duration=18):
-        self._strength = strength
-        self._timer    = duration
-
-    def get_offset(self):
-        if self._timer <= 0:
-            return (0, 0)
-        self._timer    -= 1
-        self._strength *= self._decay
-        angle = random.uniform(0, math.tau)
-        r     = self._strength
-        return (int(math.cos(angle) * r), int(math.sin(angle) * r))
-
-
 # ─── Difficulty selector overlay ─────────────────────────────────────────────
 
 class DifficultyOverlay:
     """Pre-game overlay to pick bot difficulty before battle starts."""
 
     CONFIGS = {
+        "normal": {
+            "label": "NORMAL",
+            "color": (50, 130, 220),
+            "hover": (70, 160, 255),
+            "desc":  ["• No lookahead", "• Makes mistakes (12%)", "• Good for beginners"],
+        },
         "medium": {
             "label": "MEDIUM",
             "color": (50, 160, 50),
             "hover": (70, 200, 70),
-            "desc":  ["• 1-ply lookahead", "• Rarely makes mistakes", "• No instant garbage"],
+            "desc":  ["• 1-ply lookahead", "• Rarely mistakes (5%)", "• No instant garbage"],
         },
         "hard": {
             "label": "HARD",
             "color": (200, 80, 20),
             "hover": (240, 110, 40),
-            "desc":  ["• 1-ply lookahead", "• Almost perfect play", "• Instant garbage counter"],
+            "desc":  ["• 1-ply lookahead", "• Near-perfect (1%)", "• Instant garbage"],
         },
     }
 
@@ -66,23 +48,24 @@ class DifficultyOverlay:
     def _build(self):
         w, h = self.screen.get_size()
         cx = w // 2
-        card_w, card_h = 260, 220
-        gap = 30
+        card_w, card_h = 240, 200
+        gap = 24
 
-        total = card_w * 2 + gap
-        left_x = cx - total // 2
+        configs = list(self.CONFIGS.items())
+        total_w = len(configs) * card_w + (len(configs) - 1) * gap
+        left_x  = cx - total_w // 2
+        y = h // 2 - card_h // 2 - 20
 
         self.cards = {}
-        for i, (key, cfg) in enumerate(self.CONFIGS.items()):
+        for i, (key, cfg) in enumerate(configs):
             x = left_x + i * (card_w + gap)
-            y = h // 2 - card_h // 2 - 10
             btn = Button(x, y + card_h + 14, card_w, 44,
                          f"▶  {cfg['label']}",
                          cfg["color"], cfg["hover"], self.font_md, radius=10)
             self.cards[key] = {"rect": pygame.Rect(x, y, card_w, card_h),
                                "btn": btn, "cfg": cfg}
 
-        self.btn_back = Button(cx - 90, h // 2 + card_h // 2 + 70,
+        self.btn_back = Button(cx - 90, y + card_h + 76,
                                180, 44, "← BACK", BTN_NORMAL, BTN_HOVER, self.font_sm)
 
     def handle_event(self, event):
@@ -104,10 +87,10 @@ class DifficultyOverlay:
         self.screen.blit(overlay, (0, 0))
 
         title = self.font_xl.render("BATTLE MODE", True, WHITE)
-        self.screen.blit(title, title.get_rect(center=(cx, h // 2 - 180)))
+        self.screen.blit(title, title.get_rect(center=(cx, 42)))
 
         sub = self.font_sm.render("Choose bot difficulty", True, TEXT_DIM)
-        self.screen.blit(sub, sub.get_rect(center=(cx, h // 2 - 130)))
+        self.screen.blit(sub, sub.get_rect(center=(cx, 84)))
 
         for key, card in self.cards.items():
             r = card["rect"]
@@ -153,7 +136,6 @@ class BattleScene:
         self.font_xl = pygame.font.SysFont("Arial", 72, bold=True)
 
         self.sound = AudioManager()
-        self.shake = ScreenShake()
         self.state = self.STATE_DIFFICULTY
 
         self._diff_overlay = DifficultyOverlay(
@@ -414,10 +396,12 @@ class BattleScene:
             return
         dt_ms = self.clock.get_time()
 
-        # Player gravity
+        # Player gravity (soft-drop multiplier applied when ↓ held)
         self.gm.player.update(dt_ms, self.gm.player_piece, self.gm.player_board)
+        effective_fall = (self.player_fall_speed / SOFT_DROP_MULT
+                          if self.gm.player.is_soft_dropping else self.player_fall_speed)
         self.player_fall_time += dt_ms / 1000.0
-        if self.player_fall_time >= self.player_fall_speed:
+        if self.player_fall_time >= effective_fall:
             self.player_fall_time = 0.0
             if self.gm.player_board.is_valid_move(self.gm.player_piece, dy=1):
                 self.gm.player_piece.y += 1
@@ -471,7 +455,7 @@ class BattleScene:
         self._draw_board(self.gm.bot_board, self.gm.bot_piece, bot_offset)
         self.screen = old_screen
 
-        # Blit to real screen (no shake offset since we removed shake)
+        # Blit to real screen
         old_screen.blit(self._game_surf, (0, 0))
 
         # Overlays on top

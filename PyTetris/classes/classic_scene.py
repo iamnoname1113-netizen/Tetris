@@ -226,12 +226,9 @@ class SettingsOverlay:
             make(4, "Block Glow",
                  lambda: settings.glow_enabled,
                  lambda v: (setattr(settings, "glow_enabled", v), invalidate_block_cache())),
-            make(5, "Screen Shake",
-                 lambda: settings.shake_enabled,
-                 lambda v: setattr(settings, "shake_enabled", v)),
         ]
 
-        self.btn_close = Button(cx - 90, y0 + 6*(btn_h+gap) + 10, 180, 44,
+        self.btn_close = Button(cx - 90, y0 + 5*(btn_h+gap) + 10, 180, 44,
                                 "← BACK", BTN_NORMAL, BTN_HOVER, self.font_sm)
 
     def handle_event(self, event):
@@ -295,6 +292,7 @@ class ClassicScene:
         self.fall_time     = 0.0
         self.fall_speed    = fall_speed_for_level(1)
         self.drop_trail    = []
+        self._soft_dropping = False
 
     def _build_buttons(self):
         cx = SCREEN_WIDTH // 2
@@ -567,6 +565,7 @@ class ClassicScene:
                 elif event.key == pygame.K_RIGHT and self.board.is_valid_move(self.current_piece, dx=1):
                     self.current_piece.x += 1
                 elif event.key == pygame.K_DOWN and self.board.is_valid_move(self.current_piece, dy=1):
+                    self._soft_dropping = True
                     self.current_piece.y += 1
                 elif event.key == pygame.K_UP:
                     old_shape = [r[:] for r in self.current_piece.shape]
@@ -590,6 +589,10 @@ class ClassicScene:
                     while self.board.is_valid_move(self.current_piece, dy=1):
                         self.current_piece.y += 1
                     self._lock_piece()
+
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_DOWN:
+                    self._soft_dropping = False
 
     def _lock_piece(self):
         self.board.place_tetromino(self.current_piece)
@@ -624,8 +627,10 @@ class ClassicScene:
         self._update_trail()
         if self.state != self.STATE_PLAYING:
             return
+        effective_speed = (self.fall_speed / SOFT_DROP_MULT
+                           if self._soft_dropping else self.fall_speed)
         self.fall_time += self.clock.get_time() / 1000.0
-        if self.fall_time >= self.fall_speed:
+        if self.fall_time >= effective_speed:
             self.fall_time = 0.0
             if self.board.is_valid_move(self.current_piece, dy=1):
                 self.current_piece.y += 1

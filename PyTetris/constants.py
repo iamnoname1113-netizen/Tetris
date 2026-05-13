@@ -225,6 +225,7 @@ HEURISTIC_INVINCIBLE = {
 
 # ── Bot difficulty map (used by BattleScene) ─────────────────────────────────
 BOT_CONFIGS = {
-    "medium": (BOT_MEDIUM,     HEURISTIC_MEDIUM),
-    "hard":   (BOT_HARD,       HEURISTIC_HARD),
+    "normal":     (BOT_NORMAL,     HEURISTIC_NORMAL),
+    "medium":     (BOT_MEDIUM,     HEURISTIC_MEDIUM),
+    "hard":       (BOT_HARD,       HEURISTIC_HARD),
 }

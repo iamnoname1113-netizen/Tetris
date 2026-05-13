@@ -1,6 +1,7 @@
 import pygame
 import time
 from constants import *
+from classes.settings import settings
 
 class AudioManager:
     """
@@ -31,22 +32,24 @@ class AudioManager:
             self.sounds[key] = None
 
     def play(self, key):
+        if not settings.sound_enabled:
+            return
         if not getattr(self, 'sounds', None) or key not in self.sounds:
             return
-            
+
         sound = self.sounds[key]
         if not sound:
             return
 
         now = time.time() * 1000
         throttle = AUDIO_THROTTLE_MS.get(key, 0)
-        
         if now - self.last_played[key] >= throttle:
-            # Find an available channel or just play it if none are specifically assigned
             sound.play()
             self.last_played[key] = now
 
     def play_bgm(self):
+        if not settings.music_enabled:
+            return
         try:
             pygame.mixer.music.load(BG_MUSIC)
             pygame.mixer.music.play(-1)

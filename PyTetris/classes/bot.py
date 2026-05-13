@@ -182,9 +182,7 @@ class Bot:
             action = self._step_toward_target(piece, board)
             if action == "none":
                 break
-            if action == "left"   and board.is_valid_move(piece, dx=-1): piece.x -= 1
-            elif action == "right" and board.is_valid_move(piece, dx=1):  piece.x += 1
-            elif action == "rotate": self._apply_rotation(piece, board)
+            # _step_toward_target() already applied the move — no re-apply needed
         self._state = self._DONE
         return "drop"
 

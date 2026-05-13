@@ -3,6 +3,7 @@
 import json
 import os
 from typing import List, Tuple
+from constants import SCORE_TABLE
 
 
 class ScoreManager:
@@ -17,8 +18,7 @@ class ScoreManager:
 
     def add_score(self, lines_cleared: int) -> None:
         """Tính điểm theo số hàng xóa."""
-        points = [0, 40, 100, 300, 1200]  # 1,2,3,4 hàng
-        self.score += points[lines_cleared] * self.level
+        self.score += SCORE_TABLE[lines_cleared] * self.level
         self.lines += lines_cleared
         self.level = self.lines // 10 + 1
 

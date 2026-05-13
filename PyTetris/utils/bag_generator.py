@@ -17,12 +17,4 @@ class BagGenerator:
     def get_next(self) -> Tetromino:
         if not self.bag:
             self._refill()
-        t_type = self.bag.pop(0)
-        t = Tetromino()
-        t.type = t_type
-        from constants import COLORS
-        t.color = COLORS[t_type]
-        # Re-initialize shape based on type
-        # Tetromino() initializes randomly, so we need to set it properly
-        t.shape = t.SHAPES[t_type]
-        return t
+        return Tetromino(self.bag.pop(0))

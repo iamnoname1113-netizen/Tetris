@@ -12,9 +12,8 @@ class Settings:
     def __init__(self):
         self.sound_enabled: bool = True      # master SFX toggle
         self.music_enabled: bool = True      # background music toggle
-        self.effects_enabled: bool = True    # visual effects (drop trail, shake, glow)
+        self.effects_enabled: bool = True    # visual effects (drop trail, glow)
         self.ghost_enabled: bool = True      # ghost piece preview
-        self.shake_enabled: bool = True      # screen-shake on hard drop
         self.glow_enabled: bool = True       # block glow/shadow effect
 
         # Battle bot difficulty: "medium" | "hard"
