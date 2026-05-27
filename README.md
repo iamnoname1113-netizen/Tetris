@@ -1,2 +1,8 @@
-# Tetris
-source_code
+**PyTetris is a complete, from-scratch Tetris implementation in Python and Pygame. It covers two distinct game modes: a classic single-player experience and a real-time split-screen battle against an AI opponent.**
+
+- **Classic Mode** implements every standard Tetris mechanic — a 7-bag randomizer to prevent piece starvation, gravity curve tied to level progression, hard and soft drop, ghost piece preview, wall kicks, and a DAS/ARR system for smooth keyboard feel. Visual polish includes per-block glow, particle drop trails, and a surface caching layer that keeps the renderer at a stable 60 FPS by turning repeated draw calls into O(1) dictionary lookups.
+
+- **Battle Mode** introduces a garbage line system and a heuristic AI bot with three difficulty tiers (Normal, Medium, Hard). The bot uses a brute-force placement search scored against four heuristic terms — lines cleared, holes, aggregate height, and bumpiness — with optional 1-ply lookahead on the next piece. To avoid blocking the main game loop, the search runs entirely in a background daemon thread operating on a lightweight _BoardProxy snapshot, safe under CPython's GIL. A configurable mistake probability makes lower difficulty levels feel genuinely human rather than mechanically suboptimal.
+
+  All tunable parameters — bot delays, heuristic weights, DAS/ARR timings, garbage tables — are centralized in constants.py, so difficulty balancing never requires touching game logic. A Settings singleton propagates user preferences (sound, ghost piece, glow, bot difficulty) across scenes without any explicit save/load mechanism.
+
